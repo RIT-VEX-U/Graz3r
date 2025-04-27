@@ -27,7 +27,8 @@ void ClamperSys::toggle_rush_arm() {
 }
 
 void ClamperSys::auto_clamp() {
-    if (clamper_sensor.objectDistance(vex::distanceUnits::mm) <= 50) {
+    // printf("distance: %f\n", clamper_sensor.objectDistance(vex::distanceUnits::mm));
+    if (clamper_sensor.objectDistance(vex::distanceUnits::mm) <= 43) {
         clamper_state = ClamperState::CLAMPED;
     } else {
         clamper_state = ClamperState::UNCLAMPED;
@@ -100,9 +101,9 @@ int ClamperSys::thread_fn(void *ptr) {
         } else if (self.rush_arm_state == RushState::IN) {
             goal_rush_sol.set(false);
         }
-        // if (self.doAutoClamping) {
-        //     self.auto_clamp();
-        // }
+        if (self.doAutoClamping) {
+            self.auto_clamp();
+        }
         vexDelay(20);
     }
     return 0;

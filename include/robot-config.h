@@ -18,15 +18,15 @@ extern vex::optical color_sensor;
 
 // ================ OUTPUTS ================
 // Motors
-extern vex::motor left_back_bottom;
-extern vex::motor left_center_bottom;
-extern vex::motor left_front_top;
-extern vex::motor left_back_top;
+extern vex::motor left_front_most;
+extern vex::motor left_front_middle;
+extern vex::motor left_back_middle;
+extern vex::motor left_back_most;
 
-extern vex::motor right_back_bottom;
-extern vex::motor right_center_bottom;
-extern vex::motor right_front_top;
-extern vex::motor right_back_top;
+extern vex::motor right_front_most;
+extern vex::motor right_front_middle;
+extern vex::motor right_back_middle;
+extern vex::motor right_back_most;
 
 extern vex::motor conveyor;
 extern vex::motor intake_motor;

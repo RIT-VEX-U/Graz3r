@@ -6,9 +6,9 @@ vex::controller con;
 
 // ================ INPUTS ================
 // Digital sensors
-vex::inertial imu(vex::PORT15);
-// vex::distance clamper_sensor(vex::PORT18);
-// vex::optical color_sensor(vex::PORT13);
+vex::inertial imu(vex::PORT11);
+vex::distance clamper_sensor(vex::PORT18);
+vex::optical color_sensor(vex::PORT12);
 
 // ================ OUTPUTS ================
 // Motors
@@ -43,7 +43,7 @@ const vex::controller::button &conveyor_button_rev = con.ButtonR2;
 PID::pid_config_t drive_pid_cfg{
   .p = 0.6,
   .i = 0,
-  .d = 0.04,
+  .d = 0.035,
   .deadband = 0.5,
   .on_target_time = 0.1,
 };
@@ -89,6 +89,7 @@ ClamperSys clamper_sys{};
 IntakeSys intake_sys{};
 
 Pose2d zero{0, 0, from_degrees(0)};
+Pose2d red_r_test{19.4, 42.4, from_degrees(0)};
 
 OdometryTank odom(left_drive_motors, right_drive_motors, robot_cfg, &imu);
 
@@ -103,11 +104,24 @@ void print_multiline(const std::string &str, int y, int x);
  * Main robot initialization on startup. Runs before opcontrol and autonomous are started.
  */
 void robot_init() {
-    odom.set_position(zero);
+    odom.set_position(red_r_test);
 
     while (imu.isCalibrating()) {
         vexDelay(10);
     }
-    screen::start_screen(Brain.Screen, {new screen::PIDPage(turn_pid, "turnpid")});
+    screen::start_screen(
+      Brain.Screen, {new screen::StatsPage(
+                      {{"left_front_most", left_front_most},
+                       {"left_front_middle", left_front_middle},
+                       {"left_back_middle", left_back_middle},
+                       {"left_back_most", left_back_most},
+                       {"right_front_most", right_front_most},
+                       {"right_front_middle", right_front_middle},
+                       {"right_back_middle", right_back_middle},
+                       {"right_back_most", right_back_most},
+                       {"intake", intake_motor},
+                       {"conveyor", conveyor}}
+                    )}
+    );
     printf("started!\n");
 }
