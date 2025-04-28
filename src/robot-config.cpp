@@ -27,6 +27,8 @@ vex::motor_group right_drive_motors({right_front_most, right_front_middle, right
 vex::motor conveyor(vex::PORT7, vex::gearSetting::ratio6_1, true);
 vex::motor intake_motor(vex::PORT4, vex::gearSetting::ratio6_1, false);
 
+vex::motor wallstake_motor(vex::PORT14, vex::gearSetting::ratio6_1, false);
+
 vex::digital_out mcglight_board(Brain.ThreeWirePort.F);
 
 // pnematices
