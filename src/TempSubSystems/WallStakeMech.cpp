@@ -5,11 +5,11 @@
 #include "core/utils/controls/pid.h"
 
 WallStakeMech::WallStakeMech(
-  const vex::motor_group &motors, const vex::rotation &rotation, const Rotation2d &tolerance,
+  const vex::motor wallstake_motor, const vex::rotation &rotation, const Rotation2d &tolerance,
   const Rotation2d &setpoint, const double &pot_offset, PID pid
 )
-    : motors(motors), rotation(rotation), tolerance(tolerance), setpoint(setpoint), pot_offset(pot_offset),
-      wallstake_pid(pid) {
+    : wallstake_motor(wallstake_motor), rotation(rotation), tolerance(tolerance), setpoint(setpoint),
+      pot_offset(pot_offset), wallstake_pid(pid) {
     handle = new vex::task(background_task, (void *)this);
     hold = true;
 }
@@ -70,7 +70,7 @@ void WallStakeMech::update() {
     // printf("%f\n", (get_angle().degrees()));
 }
 
-void WallStakeMech::set_voltage(const double &voltage) { motors.spin(vex::fwd, voltage, vex::volt); }
+void WallStakeMech::set_voltage(const double &voltage) { wallstake_motor.spin(vex::fwd, voltage, vex::volt); }
 
 /**
  * Function that runs in the background task. This function pointer is passed

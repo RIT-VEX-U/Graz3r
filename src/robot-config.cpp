@@ -9,6 +9,7 @@ vex::controller con;
 vex::inertial imu(vex::PORT11);
 vex::distance clamper_sensor(vex::PORT18);
 vex::optical color_sensor(vex::PORT12);
+vex::rotation wallstake_sensor(vex::PORT16);
 
 // ================ OUTPUTS ================
 // Motors
@@ -69,9 +70,17 @@ PID::pid_config_t correction_pid_cfg{
   .deadband = 1,
 };
 
+PID::pid_config_t wallstake_pid_cfg{
+  .p = 0,
+  .i = 0,
+  .d = 0,
+  .deadband = 10.5,
+};
+
 FeedForward::ff_config_t drive_ff_cfg{.kS = 0.01, .kV = 0.015, .kA = 0.002, .kG = 0};
 
 PID turn_pid{turn_pid_cfg};
+PID wallstake_pid(wallstake_pid_cfg);
 // ======== SUBSYSTEMS ========
 
 robot_specs_t robot_cfg = {
@@ -87,8 +96,14 @@ robot_specs_t robot_cfg = {
   .correction_pid = correction_pid_cfg,
 };
 
+Rotation2d wallstake_tolerance(0);
+Rotation2d wallstake_setpoint(0);
+double wallstake_offset = 0;
+
 ClamperSys clamper_sys{};
 IntakeSys intake_sys{};
+WallStakeMech wallstake_sys{wallstake_motor,    wallstake_sensor, wallstake_tolerance,
+                            wallstake_setpoint, wallstake_offset, wallstake_pid};
 
 Pose2d zero{0, 0, from_degrees(0)};
 Pose2d red_r_test{19.4, 42.4, from_degrees(0)};

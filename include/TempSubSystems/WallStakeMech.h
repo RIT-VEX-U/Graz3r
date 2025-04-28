@@ -10,7 +10,7 @@ class WallStakeMech {
     bool hold;
 
     WallStakeMech(
-      const vex::motor_group &motors, const vex::rotation &rotation, const Rotation2d &tolerance,
+      const vex::motor wallstake_motor, const vex::rotation &rotation, const Rotation2d &tolerance,
       const Rotation2d &setpoint, const double &pot_offset, PID pid
     );
 
@@ -50,7 +50,7 @@ class WallStakeMech {
     void spin(double volts);
 
   private:
-    vex::motor_group motors;
+    vex::motor wallstake_motor;
     vex::rotation rotation;
 
     Rotation2d tolerance;
