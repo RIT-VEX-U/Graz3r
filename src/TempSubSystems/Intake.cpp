@@ -17,15 +17,10 @@ void IntakeSys::intake_stop() { intake_state = IntakeState::STOP; }
 
 void IntakeSys::conveyor_in(double volts) {
     conveyor_state = IntakeState::IN;
-    conveyor_intaking = true;
     conveyorVolts = volts;
 }
-void IntakeSys::conveyor_stop() {
-    conveyor_state = IntakeState::STOP;
-    conveyor_intaking = false;
-}
+void IntakeSys::conveyor_stop() { conveyor_state = IntakeState::STOP; }
 void IntakeSys::conveyor_out(double volts) {
-    conveyor_intaking = false;
     conveyor_state = IntakeState::OUT;
     conveyorVolts = volts;
 }
@@ -44,12 +39,15 @@ bool IntakeSys::seeing_red() {
     }
 }
 void IntakeSys::conveyor_stalled_fix() {
-    if (conveyor.current(vex::currentUnits::amp) > 2.4 && intake_state == IntakeState::IN) {
+    // printf("conveyor current: %f\n", conveyor.current());
+    if (conveyor.current(vex::currentUnits::amp) > 2.35 && !con_reversed_for_fix) {
         printf("conveyor stalled!\n");
         conveyor_state = IntakeState::OUT;
         conveyor_stalled_timer.reset();
+        con_reversed_for_fix = true;
     }
-    if (conveyor_stalled_timer.time(timeUnits::msec) == 100) {
+    if (conveyor_stalled_timer.time(timeUnits::msec) > 100 && con_reversed_for_fix) {
+        con_reversed_for_fix = false;
         conveyor_state = IntakeState::IN;
     }
 }
@@ -63,15 +61,22 @@ bool IntakeSys::seeing_blue() {
 }
 
 void IntakeSys::colorSort() {
+    printf("color hue: %f\n", color_sensor.hue());
     if (color_to_remove == BLUE && seeing_blue()) {
+        printf("seeing blue!\n");
         conveyor_state = IntakeState::STOP;
+        con_stopped_for_sort = true;
         color_sort_timer.reset();
     } else if (color_to_remove == RED && seeing_red()) {
+        printf("seeing red!\n");
         conveyor_state = IntakeState::STOP;
+        con_stopped_for_sort = true;
         color_sort_timer.reset();
     }
-    if (color_sort_timer.time(vex::timeUnits::msec) == 100) {
+    if (color_sort_timer.time(vex::timeUnits::msec) > 100 && con_stopped_for_sort) {
+        printf("resetting conveyor\n");
         conveyor_state = IntakeState::IN;
+        con_stopped_for_sort = false;
     }
 }
 
@@ -96,7 +101,7 @@ int IntakeSys::thread_fn(void *ptr) {
         } else if (self.conveyor_state == IntakeState::STOP) {
             conveyor.stop();
         }
-        if (self.do_color_sort && self.conveyor_intaking) {
+        if (self.do_color_sort) {
             self.colorSort();
 
             mcglight_board.set(1);
@@ -104,7 +109,6 @@ int IntakeSys::thread_fn(void *ptr) {
             mcglight_board.set(0);
         }
         if (self.fix_conveyor_stalling) {
-            printf("concurr: %f\n", conveyor.current());
             self.conveyor_stalled_fix();
         }
         vexDelay(20);
@@ -142,7 +146,6 @@ AutoCommand *IntakeSys::IntakeStopCmd() {
 
 AutoCommand *IntakeSys::ConveyorInCmd(double amt) {
     return new FunctionCommand([this, amt]() {
-        this->conveyor_intaking = true;
         conveyor_in(amt);
         return true;
     });
@@ -150,7 +153,6 @@ AutoCommand *IntakeSys::ConveyorInCmd(double amt) {
 
 AutoCommand *IntakeSys::ConveyorOutCmd(double amt) {
     return new FunctionCommand([this, amt]() {
-        this->conveyor_intaking = false;
         conveyor_out(amt);
         return true;
     });
@@ -158,7 +160,6 @@ AutoCommand *IntakeSys::ConveyorOutCmd(double amt) {
 
 AutoCommand *IntakeSys::ConveyorStopCmd() {
     return new FunctionCommand([this]() {
-        this->conveyor_intaking = false;
         conveyor_stop();
         return true;
     });

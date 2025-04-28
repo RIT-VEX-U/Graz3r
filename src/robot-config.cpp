@@ -30,6 +30,10 @@ vex::motor intake_motor(vex::PORT4, vex::gearSetting::ratio6_1, false);
 
 vex::motor wallstake_motor(vex::PORT14, vex::gearSetting::ratio6_1, false);
 
+std::vector<vex::motor> all_motors{left_front_most,  left_front_middle,  left_back_middle,  left_back_most,
+                                   right_front_most, right_front_middle, right_back_middle, right_back_most,
+                                   conveyor,         intake_motor,       wallstake_motor};
+
 vex::digital_out mcglight_board(Brain.ThreeWirePort.F);
 
 // pnematices
@@ -102,8 +106,8 @@ double wallstake_offset = 0;
 
 ClamperSys clamper_sys{};
 IntakeSys intake_sys{};
-WallStakeMech wallstake_sys{wallstake_motor,    wallstake_sensor, wallstake_tolerance,
-                            wallstake_setpoint, wallstake_offset, wallstake_pid};
+// WallStakeMech wallstake_sys{wallstake_motor,    wallstake_sensor, wallstake_tolerance,
+//                             wallstake_setpoint, wallstake_offset, wallstake_pid};
 
 Pose2d zero{0, 0, from_degrees(0)};
 Pose2d red_r_test{19.4, 42.4, from_degrees(0)};
@@ -122,10 +126,6 @@ void print_multiline(const std::string &str, int y, int x);
  */
 void robot_init() {
     odom.set_position(red_r_test);
-
-    while (imu.isCalibrating()) {
-        vexDelay(10);
-    }
     screen::start_screen(
       Brain.Screen, {new screen::StatsPage(
                       {{"left_front_most", left_front_most},
@@ -140,5 +140,51 @@ void robot_init() {
                        {"conveyor", conveyor}}
                     )}
     );
-    printf("started!\n");
+    if (!imu.installed()) {
+        printf("no imu installed\n");
+    }
+    while (imu.isCalibrating()) {
+        vexDelay(10);
+    }
+    printf("imu calibrated!\n");
+    bool all_motors_cool = true;
+    bool all_motors_installed = true;
+    std::vector<vex::motor> overheated_motors;
+    for (vex::motor &mot : all_motors) {
+        if (mot.temperature(vex::temperatureUnits::celsius) > 40) {
+            printf("motor on port: %d too hot\n", mot.index() + 1);
+            overheated_motors.push_back(mot);
+            all_motors_cool = false;
+        }
+        if (!mot.installed()) {
+            printf("motor on port: %f not installed\n", mot.index() + 1);
+            all_motors_installed = false;
+        }
+    }
+    if (!all_motors_cool && all_motors_installed) {
+        printf("waiting for motors to cool...\n");
+        while (!all_motors_cool) {
+            all_motors_cool = true;
+            for (int i = 0; i < overheated_motors.size(); i++) {
+                if (overheated_motors[i].temperature(vex::temperatureUnits::celsius) > 35) {
+                    all_motors_cool = false;
+                }
+                if (overheated_motors[i].temperature(vex::temperatureUnits::celsius) < 35) {
+                    overheated_motors.erase(overheated_motors.begin() + i);
+                    printf("motor on port: %f, has cooled off\n", overheated_motors[i].index() + 1);
+                }
+            }
+        }
+        printf("all motors cooled off\n");
+    }
+    if (!all_motors_installed) {
+        printf("some motors not installed!\n");
+    }
+    if (!color_sensor.installed()) {
+        printf("no color sensor installed\n");
+    }
+    if (!clamper_sensor.installed()) {
+        printf("no clamper sensor installed\n");
+    }
+    printf("ready!\n");
 }
