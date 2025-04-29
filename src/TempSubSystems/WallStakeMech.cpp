@@ -73,7 +73,7 @@ void WallStakeMech::update() {
         // }
         set_voltage(-pidout);
     }
-    printf("%f\n", (get_angle().degrees()));
+    // printf("%f\n", (get_angle().degrees()));
 }
 
 void WallStakeMech::set_voltage(const double &voltage) { wallstake_motor.spin(vex::fwd, voltage, vex::volt); }

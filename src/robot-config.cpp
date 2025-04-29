@@ -1,4 +1,3 @@
-#pragma once
 #include "robot-config.h"
 
 vex::brain Brain;
@@ -158,12 +157,12 @@ void robot_init() {
     std::vector<vex::motor> overheated_motors;
     for (vex::motor &mot : all_motors) {
         if (mot.temperature(vex::temperatureUnits::celsius) > 40) {
-            printf("motor on port: %d too hot\n", mot.index() + 1);
+            printf("motor on port: %ld too hot\n", mot.index() + 1);
             overheated_motors.push_back(mot);
             all_motors_cool = false;
         }
         if (!mot.installed()) {
-            printf("motor on port: %f not installed\n", mot.index() + 1);
+            printf("motor on port: %ld not installed\n", mot.index() + 1);
             all_motors_installed = false;
         }
     }
