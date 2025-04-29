@@ -236,7 +236,9 @@ void opcontrol() {
     }};
 
     while (true) {
+        printf("opcontroolling\n");
         // printf("%f, %f, %f\n", ukf.xhat(0), ukf.xhat(1), rad2deg(ukf.xhat(2)));
-        vexDelay(10);
+        drive_sys.drive_tank(0.2, -0.2);
+        vexDelay(100);
     }
 }

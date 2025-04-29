@@ -108,9 +108,10 @@ void print_multiline(const std::string &str, int y, int x);
  * Main robot initialization on startup. Runs before opcontrol and autonomous are started.
  */
 void robot_init() {
-  while (true) {
-    printf("ugh\n");
-  }
+    while (true) {
+        printf("ugh\n");
+        vexDelay(1000);
+    }
   //   odom.set_position(red_r_test);
 
   //   while (imu.isCalibrating()) {
