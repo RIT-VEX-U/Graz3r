@@ -1,13 +1,16 @@
 #pragma once
 #include "TempSubSystems/TempSubSystems.h"
+#include "core/subsystems/odometry/odometry_tank_lidar.h"
 #include "core.h"
 #include "core/subsystems/fun/video.h"
 #include "inttypes.h"
 #include "vex.h"
 
+
 #define WALLSTAKE_POT_OFFSET
 
 extern vex::brain brain;
+
 extern vex::controller con;
 
 // ================ INPUTS ================
@@ -56,6 +59,7 @@ extern PID turn_pid;
 extern PID::pid_config_t correction_pid_cfg;
 
 extern OdometryTank odom;
+extern OdometryTankLidar lidar;
 
 extern robot_specs_t robot_cfg;
 extern TankDrive drive_sys;

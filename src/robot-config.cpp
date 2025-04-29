@@ -1,5 +1,6 @@
 #pragma once
 #include "robot-config.h"
+#include "core/subsystems/odometry/odometry_tank_lidar.h"
 
 vex::brain Brain;
 vex::controller con;
@@ -92,6 +93,10 @@ Pose2d zero{0, 0, from_degrees(0)};
 Pose2d red_r_test{19.4, 42.4, from_degrees(0)};
 
 OdometryTank odom(left_drive_motors, right_drive_motors, robot_cfg, &imu);
+OdometryTankLidar lidar(
+  0.75, 5.497786, Pose2d(24, 120, from_degrees(-90)), EVec<5>{0.1, 0.1, 0.1, 0.1, 0.1}, EVec<5>{5, 5, 0.1, 5, 0.1},
+  EVec<2>{1, 0.01}, imu, left_drive_motors, right_drive_motors, vex::PORT13, 921600, Transform2d(-5, 6.5, from_degrees(180)), 0.188575, 0.024388, 1.6365, 0.1932
+);
 
 TankDrive drive_sys(left_drive_motors, right_drive_motors, robot_cfg, &odom);
 
@@ -124,4 +129,11 @@ void robot_init() {
                     )}
     );
     printf("started!\n");
+
+    vexDelay(5000);
+
+    while (true) {
+      std::cout << lidar.get_position() << std::endl;
+      vexDelay(100);
+    }
 }
