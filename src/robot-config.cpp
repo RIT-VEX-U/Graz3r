@@ -161,22 +161,6 @@ void robot_init() {
             all_motors_installed = false;
         }
     }
-    if (!all_motors_cool && all_motors_installed) {
-        printf("waiting for motors to cool...\n");
-        while (!all_motors_cool) {
-            all_motors_cool = true;
-            for (int i = 0; i < overheated_motors.size(); i++) {
-                if (overheated_motors[i].temperature(vex::temperatureUnits::celsius) > 35) {
-                    all_motors_cool = false;
-                }
-                if (overheated_motors[i].temperature(vex::temperatureUnits::celsius) < 35) {
-                    overheated_motors.erase(overheated_motors.begin() + i);
-                    printf("motor on port: %f, has cooled off\n", overheated_motors[i].index() + 1);
-                }
-            }
-        }
-        printf("all motors cooled off\n");
-    }
     if (!all_motors_installed) {
         printf("some motors not installed!\n");
     }

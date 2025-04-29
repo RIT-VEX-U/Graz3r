@@ -27,8 +27,8 @@ void ClamperSys::toggle_rush_arm() {
 }
 
 void ClamperSys::auto_clamp() {
-    // printf("distance: %f\n", clamper_sensor.objectDistance(vex::distanceUnits::mm));
-    if (clamper_sensor.objectDistance(vex::distanceUnits::mm) <= 43) {
+    printf("distance: %.f\n", clamper_sensor.objectDistance(vex::distanceUnits::mm));
+    if (clamper_sensor.objectDistance(vex::distanceUnits::mm) <= 75) {
         clamper_state = ClamperState::CLAMPED;
     } else {
         clamper_state = ClamperState::UNCLAMPED;

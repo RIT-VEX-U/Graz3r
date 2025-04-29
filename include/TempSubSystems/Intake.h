@@ -62,6 +62,6 @@ class IntakeSys {
     double conveyorVolts = 12;
     bool con_stopped_for_sort = false;
     bool do_color_sort = true;
-    bool fix_conveyor_stalling = false;
+    bool fix_conveyor_stalling = true;
     bool con_reversed_for_fix = false;
 };
