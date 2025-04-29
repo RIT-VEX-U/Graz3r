@@ -21,7 +21,7 @@ class OdometryTankLidar {
     static EVec<5> f(const EVec<5> &xhat, const EVec<2> &u);
 
     int odom_thread(void *ptr);
-    int lidar_thread(void *ptr);
+    static int lidar_thread(void *ptr);
     void kill_threads();
 
     // Happens every 10ms, when we get data
@@ -35,7 +35,6 @@ class OdometryTankLidar {
     // we should latency compensate or use a buffer or some such... ugh
     void lidar_update(const double &distance_in, const double &angle_deg_cw);
 
-  private:
     UKF<5, 2, 2> observer_;
     EVec<2> R_lidar;
     // EVec<2> R_odom;
@@ -69,6 +68,8 @@ class OdometryTankLidar {
     uint32_t baudrate_;
 
     std::atomic<bool> running_{true};
+
+    vex::task *lidar_handle;
 
 
     static EVec<5> mean_func_X(const EMat<5, 7> &sigmas, const EVec<7> &Wm) {
@@ -169,6 +170,7 @@ class OdometryTankLidar {
             // once) printf("%d\n", vexGenericSerialReceiveAvail(port));
             if (vexGenericSerialReceiveAvail(port) > 0) {
                 uint8_t character = vexGenericSerialReadChar(port);
+                printf("%X\n", character);
 
                 // if delimiter
                 if (character == 0x00) {

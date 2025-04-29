@@ -24,5 +24,6 @@ int main() {
     // Set up callbacks for autonomous and driver control periods.
     Competition.autonomous(autonomous);
     Competition.drivercontrol(opcontrol);
+    Competition.test_driver();
     robot_init();
 }

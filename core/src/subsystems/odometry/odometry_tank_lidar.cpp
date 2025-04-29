@@ -17,16 +17,18 @@ OdometryTankLidar::OdometryTankLidar(
         add_func_X
       ),
       gear_ratio_(gear_ratio), circumference_(circumference), imu_(imu), left_side_(left_side), right_side_(right_side), port_(port), baudrate_(baudrate) {this->lidar_offset_ = lidar_offset; this->Kvl_ = Kvl; this->Kal_ = Kal; this->Kva_ = Kva; this->Kaa_ = Kaa;
-        auto odom_func = [](void *ptr) {
-            OdometryTankLidar *self = (OdometryTankLidar *)ptr;
-            return self->odom_thread(ptr);
-        };
-        auto lidar_func = [](void *ptr) {
-            OdometryTankLidar *self = (OdometryTankLidar *)ptr;
-            return self->lidar_thread(ptr);
-        };
-        vex::task *handle = new vex::task{odom_func, (void *)this};
-        vex::task *handle2 = new vex::task{lidar_func, (void *)this};  
+        // auto odom_func = [](void *ptr) {
+        //     OdometryTankLidar *self = (OdometryTankLidar *)ptr;
+        //     return self->odom_thread(ptr);
+        // };
+        // auto lidar_func = [](void *ptr) {
+        //     OdometryTankLidar *self = (OdometryTankLidar *)ptr;
+        //     return self->lidar_thread(ptr);
+        // };
+        // vex::task *handle = new vex::task{odom_func, (void *)this};
+        // printf("inited\n");
+        // lidar_handle = new vex::task{lidar_thread, (void *)this};  
+        
       }
 
 void OdometryTankLidar::set_position(const Pose2d &newpos) {
@@ -104,12 +106,18 @@ int OdometryTankLidar::odom_thread(void *ptr) {
     return 0;
 }
 int OdometryTankLidar::lidar_thread(void *ptr) {
-    vexGenericSerialEnable(port_, baudrate_);
+    while (true) {
+        printf("ugh\n");
+    }
+    OdometryTankLidar &obj = *((OdometryTankLidar *)ptr);
+    vexGenericSerialEnable(obj.port_, obj.baudrate_);
     constexpr size_t BUFFER_SIZE = 6;
     uint8_t buf[BUFFER_SIZE];
 
-    while (running_) {
-        receive_packet(port_, buf, 6);
+    while (obj.running_) {
+        if (receive_packet(obj.port_, buf, 4) != 4) {
+            // continue;
+        };
 
         uint16_t angle_q6;
         uint16_t dist;
@@ -118,21 +126,22 @@ int OdometryTankLidar::lidar_thread(void *ptr) {
         memcpy(&dist, buf + sizeof(angle_q6), sizeof(dist));
 
         double angle = angle_q6 * 0.015625;
-        if (angle > 360 || angle < 0) {
-            continue;
-        }
         double distance = dist / 25.4; // to inches
-        if (distance > 203 || distance < 0) {
-            continue;
-        }
-        if (std::abs(h_lidar(observer_.xhat(), EVec<2>{distance, angle})(0) - distance) > 20) {
-            continue;
-        }
-        // printf("lidar: %f %f\n", distance, angle);
 
-        mutex.lock();
-        lidar_update(distance, angle);
-        mutex.unlock();
+        // if (angle > 360 || angle < 0) {
+        //     continue;
+        // }
+        // if (distance > 203 || distance < 0) {
+        //     continue;
+        // }
+        // if (std::abs(h_lidar(obj.observer_.xhat(), EVec<2>{distance, angle})(0) - distance) > 20) {
+        //     continue;
+        // }
+        printf("lidar: %f %f\n", distance, angle);
+
+        // mutex.lock();
+        // lidar_update(distance, angle);
+        // mutex.unlock();
     }
     vex::this_thread::yield();
 

@@ -4,6 +4,8 @@
 	],
 	"files.associations": {
 		"vector": "cpp",
-		"functional": "cpp"
+		"functional": "cpp",
+		"mutex": "cpp",
+		"new": "cpp"
 	}
 }
