@@ -60,7 +60,8 @@ class IntakeSys {
     RingColor color_to_remove = BLUE;
     double intakeVolts = 12;
     double conveyorVolts = 12;
-    bool conveyor_intaking = false;
-    bool do_color_sort = false;
-    bool fix_conveyor_stalling = false;
+    bool con_stopped_for_sort = false;
+    bool do_color_sort = true;
+    bool fix_conveyor_stalling = true;
+    bool con_reversed_for_fix = false;
 };
