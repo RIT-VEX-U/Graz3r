@@ -15,7 +15,12 @@ WallStakeMech::WallStakeMech(
 }
 
 Rotation2d WallStakeMech::get_angle() {
-    return (from_degrees(wrap_degrees_360(rotation.angle(vex::deg) - pot_offset)));
+    Rotation2d out = (from_degrees(wrap_degrees_360(rotation.angle(vex::deg) - pot_offset)));
+    if (out.wrapped_degrees_360() > 300) {
+        return from_degrees(0);
+    } else {
+        return out;
+    }
 }
 
 void WallStakeMech::set_setpoint(const Rotation2d &new_setpoint) { setpoint = new_setpoint; }
@@ -61,13 +66,14 @@ void WallStakeMech::update() {
         // double pout = kp * (setpoint.degrees() - get_angle().degrees());
         wallstake_pid.set_target(get_setpoint().degrees());
         double pidout = wallstake_pid.update(get_angle().degrees());
-        if (get_angle().degrees() < 20 || get_angle().degrees() > 270) {
-            set_voltage(12);
-        } else {
-            set_voltage(ffout + (-pidout));
-        }
+        // if (get_angle().degrees() < 20 || get_angle().degrees() > 270) {
+        //     set_voltage(12);
+        // } else {
+        //     set_voltage((-pidout));
+        // }
+        set_voltage(-pidout);
     }
-    // printf("%f\n", (get_angle().degrees()));
+    printf("%f\n", (get_angle().degrees()));
 }
 
 void WallStakeMech::set_voltage(const double &voltage) { wallstake_motor.spin(vex::fwd, voltage, vex::volt); }

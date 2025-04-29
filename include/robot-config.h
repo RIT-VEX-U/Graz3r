@@ -34,18 +34,26 @@ extern vex::motor intake_motor;
 extern vex::motor_group left_drive_motors;
 extern vex::motor_group right_drive_motors;
 
+extern vex::motor wallstake_motor;
+
+
 extern vex::digital_out mcglight_board;
 
 // Pneumatics
 
 extern vex::digital_out goal_grabber_sol;
 extern vex::digital_out goal_rush_sol;
+extern vex::digital_out wallstake_sol;
 
 // Button Definitions
 extern const controller::button &goal_grabber;
 extern const controller::button &goal_rush_arm;
 extern const controller::button &conveyor_button;
 extern const controller::button &conveyor_button_rev;
+
+extern const vex::controller::button &wallstake_toggler;
+extern const vex::controller::button &wallstake_stow;
+extern const vex::controller::button &wallstake_alliancestake;
 
 // ================ SUBSYSTEMS ================
 extern ClamperSys clamper_sys;
@@ -59,6 +67,8 @@ extern OdometryTank odom;
 
 extern robot_specs_t robot_cfg;
 extern TankDrive drive_sys;
+
+extern WallStakeMech wallstake_sys;
 
 // ================ UTILS ================
 void robot_init();
