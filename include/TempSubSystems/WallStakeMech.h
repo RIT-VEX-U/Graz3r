@@ -5,7 +5,7 @@
 
 class WallStakeMech {
   public:
-    enum WallStakeState { STOW = 210, HANDOFF = 180 };
+    enum WallStakeState { STOW = 1, HANDOFF = 29 };
 
     bool hold;
 

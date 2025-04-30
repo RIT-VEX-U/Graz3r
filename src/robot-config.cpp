@@ -1,4 +1,3 @@
-#pragma once
 #include "robot-config.h"
 
 vex::brain Brain;
@@ -9,7 +8,7 @@ vex::controller con;
 vex::inertial imu(vex::PORT11);
 vex::distance clamper_sensor(vex::PORT18);
 vex::optical color_sensor(vex::PORT12);
-vex::rotation wallstake_sensor(vex::PORT16);
+vex::rotation wallstake_sensor(vex::PORT16, true);
 
 // ================ OUTPUTS ================
 // Motors
@@ -39,12 +38,17 @@ vex::digital_out mcglight_board(Brain.ThreeWirePort.F);
 // pnematices
 vex::digital_out goal_grabber_sol{Brain.ThreeWirePort.H};
 vex::digital_out goal_rush_sol{Brain.ThreeWirePort.G};
+vex::digital_out wallstake_sol{Brain.ThreeWirePort.E};
 
 // Button Definitions
 const vex::controller::button &goal_grabber = con.ButtonB;
 const vex::controller::button &goal_rush_arm = con.ButtonDown;
 const vex::controller::button &conveyor_button = con.ButtonR1;
 const vex::controller::button &conveyor_button_rev = con.ButtonR2;
+
+const vex::controller::button &wallstake_toggler = con.ButtonL1;
+const vex::controller::button &wallstake_stow = con.ButtonL2;
+const vex::controller::button &wallstake_alliancestake = con.ButtonDown;
 
 // ================ SUBSYSTEMS ================
 PID::pid_config_t drive_pid_cfg{
@@ -75,10 +79,11 @@ PID::pid_config_t correction_pid_cfg{
 };
 
 PID::pid_config_t wallstake_pid_cfg{
-  .p = 0,
+  .p = 0.32,
   .i = 0,
-  .d = 0,
-  .deadband = 10.5,
+  .d = 0.00,
+  .deadband = 1,
+  .error_method = PID::ERROR_TYPE::LINEAR,
 };
 
 FeedForward::ff_config_t drive_ff_cfg{.kS = 0.01, .kV = 0.015, .kA = 0.002, .kG = 0};
@@ -106,8 +111,8 @@ double wallstake_offset = 0;
 
 ClamperSys clamper_sys{};
 IntakeSys intake_sys{};
-// WallStakeMech wallstake_sys{wallstake_motor,    wallstake_sensor, wallstake_tolerance,
-//                             wallstake_setpoint, wallstake_offset, wallstake_pid};
+WallStakeMech wallstake_sys{wallstake_motor,    wallstake_sensor, wallstake_tolerance,
+                            wallstake_setpoint, wallstake_offset, wallstake_pid};
 
 Pose2d zero{0, 0, from_degrees(0)};
 Pose2d red_r_test{19.4, 42.4, from_degrees(0)};
@@ -152,7 +157,7 @@ void robot_init() {
     std::vector<vex::motor> overheated_motors;
     for (vex::motor &mot : all_motors) {
         if (mot.temperature(vex::temperatureUnits::celsius) > 40) {
-            printf("motor on port: %d too hot\n", mot.index() + 1);
+            printf("motor on port: %ld too hot\n", mot.index() + 1);
             overheated_motors.push_back(mot);
             all_motors_cool = false;
         }

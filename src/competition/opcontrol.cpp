@@ -10,7 +10,26 @@ void testing();
 bool enableDrive = true;
 void opcontrol() {
     // autonomous();
-    testing();
+    // testing();
+
+    wallstake_toggler.pressed([]() {
+        wallstake_sys.hold = true;
+        if (wallstake_sys.get_angle().degrees() < 10 || wallstake_motor.velocity(vex::velocityUnits::dps) > 5) {
+            wallstake_sys.set_setpoint(from_degrees(22));
+            wallstake_sol.set(false);
+        } else if (wallstake_sys.get_angle().degrees() > 10) {
+            wallstake_sys.set_setpoint(from_degrees(180));
+            wallstake_sol.set(true);
+        }
+    });
+
+    wallstake_stow.pressed([]() {
+        wallstake_sys.hold = true;
+        wallstake_sys.set_setpoint(from_degrees(5));
+        wallstake_sol.set(false);
+    });
+
+
 
     goal_grabber.pressed([]() { clamper_sys.toggle_clamp(); });
 
