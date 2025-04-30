@@ -92,10 +92,10 @@ Pose2d zero{0, 0, from_degrees(0)};
 Pose2d red_r_test{19.4, 42.4, from_degrees(0)};
 
 OdometryTank odom(left_drive_motors, right_drive_motors, robot_cfg, &imu);
-// OdometryTankLidar lidar(
-//   0.75, 5.497786, Pose2d(24, 120, from_degrees(-90)), EVec<5>{0.1, 0.1, 0.1, 0.1, 0.1}, EVec<5>{5, 5, 0.1, 5, 0.1},
-//   EVec<2>{1, 0.01}, imu, left_drive_motors, right_drive_motors, vex::PORT13, 921600, Transform2d(-5, 6.5, from_degrees(180)), 0.188575, 0.024388, 1.6365, 0.1932
-// );
+OdometryTankLidar lidar(
+  0.75, 5.497786, Pose2d(120, 96, from_degrees(0)), EVec<3>{0.0001, 0.0001, 0.01}, EVec<3>{5, 5, 0.01},
+  EVec<2>{10, 1}, imu, left_drive_motors, right_drive_motors, vex::PORT13, 921600, Transform2d(-7, 4.5, from_degrees(180)), 0.188575, 0.024388, 1.6365, 0.1932
+);
 
 TankDrive drive_sys(left_drive_motors, right_drive_motors, robot_cfg, &odom);
 
@@ -109,7 +109,7 @@ void print_multiline(const std::string &str, int y, int x);
  */
 void robot_init() {
     while (true) {
-        printf("ugh\n");
+        // printf("ugh\n");
         vexDelay(1000);
     }
   //   odom.set_position(red_r_test);
