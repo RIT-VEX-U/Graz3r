@@ -39,8 +39,10 @@ bool IntakeSys::seeing_red() {
     }
 }
 void IntakeSys::conveyor_stalled_fix() {
-    // printf("conveyor current: %f\n", conveyor.current());
-    if (conveyor.current(vex::currentUnits::amp) > 2.4 && !con_reversed_for_fix) {
+    // printf("conveyor current: %f, conveyor dps: %f\n", conveyor.current(),
+    // conveyor.velocity(vex::velocityUnits::dps));
+    if (conveyor.current(vex::currentUnits::amp) > 2.1 && conveyor.velocity(vex::velocityUnits::dps) < 300 &&
+        !con_reversed_for_fix) {
         printf("conveyor stalled!\n");
         conveyor_state = IntakeState::OUT;
         conveyor_stalled_timer.reset();
@@ -53,7 +55,7 @@ void IntakeSys::conveyor_stalled_fix() {
 }
 
 bool IntakeSys::seeing_blue() {
-    if (color_sensor.hue() > 180 && color_sensor.hue() < 230) {
+    if (color_sensor.hue() > 150 && color_sensor.hue() < 250) {
         return true;
     } else {
         return false;
@@ -62,12 +64,12 @@ bool IntakeSys::seeing_blue() {
 
 void IntakeSys::colorSort() {
     // printf("color hue: %f\n", color_sensor.hue());
-    if (color_to_remove == BLUE && seeing_blue() && !con_stopped_for_sort) {
+    if (color_to_remove == BLUE && seeing_blue()) {
         printf("seeing blue!\n");
         conveyor_state = IntakeState::STOP;
         con_stopped_for_sort = true;
         color_sort_timer.reset();
-    } else if (color_to_remove == RED && seeing_red() && !con_stopped_for_sort) {
+    } else if (color_to_remove == RED && seeing_red()) {
         printf("seeing red!\n");
         conveyor_state = IntakeState::STOP;
         con_stopped_for_sort = true;

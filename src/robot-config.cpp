@@ -157,7 +157,7 @@ void robot_init() {
             all_motors_cool = false;
         }
         if (!mot.installed()) {
-            printf("motor on port: %f not installed\n", mot.index() + 1);
+            printf("motor on port: %.f not installed\n", mot.index() + 1);
             all_motors_installed = false;
         }
     }
