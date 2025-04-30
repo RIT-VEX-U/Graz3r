@@ -44,7 +44,7 @@
 			"compilerPath": "",
 			"cStandard": "gnu99",
 			"cppStandard": "gnu++11",
-			"intelliSenseMode": "linux-clang-x86"
+			"intelliSenseMode": "linux-gcc-x86"
 		}
 	],
 	"version": 4

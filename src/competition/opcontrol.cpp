@@ -12,6 +12,13 @@ void opcontrol() {
     // autonomous();
     // testing();
 
+    con.ButtonRight.pressed([]() {
+        printf(
+          "{%.2f, %.2f}, ODO ROT: %f\n", odom.get_position().x(), odom.get_position().y(),
+          odom.get_position().rotation().degrees()
+        );
+    }); // REMOVE THIS
+
     wallstake_toggler.pressed([]() {
         wallstake_sys.hold = true;
         if (wallstake_sys.get_angle().degrees() < 10 || wallstake_motor.velocity(vex::velocityUnits::dps) > 5) {
