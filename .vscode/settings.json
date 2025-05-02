@@ -6,6 +6,7 @@
 		"vector": "cpp",
 		"functional": "cpp",
 		"mutex": "cpp",
-		"new": "cpp"
+		"new": "cpp",
+		"cmath": "cpp"
 	}
 }

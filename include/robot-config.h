@@ -61,6 +61,8 @@ extern PID::pid_config_t correction_pid_cfg;
 extern OdometryTank odom;
 extern OdometryTankLidar lidar;
 
+extern vex::gps gps_sensor;
+
 extern robot_specs_t robot_cfg;
 extern TankDrive drive_sys;
 

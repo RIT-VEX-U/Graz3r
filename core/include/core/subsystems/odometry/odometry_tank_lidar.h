@@ -121,6 +121,8 @@ class OdometryTankLidar {
         return {wrap_radians_180(a(0) - b(0)), a(1) - b(1), a(2) - b(2)};
     }
 
+    double get_drive_velocity();
+
 
 };
 
@@ -154,3 +156,5 @@ class OdometryTankLidar {
      * @param buffer_size length in bytes of the buffer, after being decoded.
      */
     static int receive_packet(uint32_t port, uint8_t *buffer, size_t buffer_size);
+
+
