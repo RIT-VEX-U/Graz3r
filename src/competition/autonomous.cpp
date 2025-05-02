@@ -19,10 +19,10 @@ void skills_path();
 
 // Main autonomous function
 void autonomous() {
-    // blue_negative_path();
+    blue_negative_path();
     // red_negative_path();
     // blue_positive_path();
-    red_positive_path();
+    // red_positive_path();
 };
 
 // Autonomous path implementations (proceed at your own peril)
@@ -32,46 +32,74 @@ void blue_negative_path() {
 
     intake_sys.fixConveyorStalling(true);
     CommandController cc{
-      // Odometry Logs
-      new Async(new FunctionCommand([]() {
-          while (true) {
-              printf(
-                "ODO X: %f ODO Y: %f, ODO ROT: %f, turnPID Error: %f\n", odom.get_position().x(),
-                odom.get_position().y(), odom.get_position().rotation().degrees(), turn_pid.get_error()
-              );
-              vexDelay(100);
-          }
-          return true;
-      })),
+    // Odometry Logs
+    new Async(new FunctionCommand([]() {
+        while (true) {
+            printf("ODO X: %f ODO Y: %f, ODO ROT: %f, turnPID Error: %f\n", odom.get_position().x(),
+            odom.get_position().y(), odom.get_position().rotation().degrees(), turn_pid.get_error());
+            vexDelay(100);
+        }
+        return true;
+    })),
 
-      // Goal Rush (Rush and Deposit)
-      intake_sys.OuttakeCmd(), clamper_sys.RushCmd(ClamperSys::RushState::OUT),
-      // Will's Coords for r+: {{32.67, 40.82}, {49.80, 36.62}, {58.94, 33.72}}
-      // My test: {{112.75, 98.25}, {94, 98.75}, {83.5,102.25}}
-      drive_sys.PurePursuitCmd(PurePursuit::Path({{111.33, 103.18}, {94.2, 107.38}, {85.06, 110.28}}, 7), vex::forward)
-        ->withTimeout(1.5),
-      clamper_sys.RushCmd(ClamperSys::RushState::IN), drive_sys.DriveForwardCmd(24, vex::reverse),
-      new DelayCommand(450),
+    // Goal Rush (Rush and Deposit)
+    intake_sys.ConveyorOutCmd(),
+    intake_sys.OuttakeCmd(),
+    intake_sys.ConveyorStopCmd(),
+    clamper_sys.RushCmd(ClamperSys::RushState::OUT),
+    drive_sys.PurePursuitCmd(PurePursuit::Path({{111.33, 103.18}, {94.2, 107.38}, {85.06,110.28}}, 7), vex::forward)->withTimeout(1.5),
+    clamper_sys.RushCmd(ClamperSys::RushState::IN),
+    drive_sys.DriveForwardCmd(24, vex::reverse),
+    //drive_sys.TurnDegreesCmd(60),
 
-      // Alliance-side Goal (Ring)
-      drive_sys.DriveToPointCmd({121, 96}, vex::reverse, .8), intake_sys.IntakeCmd(),
-      drive_sys.TurnToHeadingCmd(90, .75), drive_sys.DriveForwardCmd(20, vex::forward),
+    // Alliance-side Goal (Ring)
+    drive_sys.TurnToPointCmd({120,96}, vex::reverse, .4),
+    drive_sys.DriveToPointCmd({120, 96}, vex::reverse, .25),
+    intake_sys.IntakeCmd(),
+    drive_sys.TurnToHeadingCmd(90, .75),
+    drive_sys.DriveForwardCmd(20, vex::forward),
 
-      // Aliance-side Goal (Grab Goal and Score)
-      drive_sys.DriveForwardCmd(24, vex::reverse, 1, .5), clamper_sys.AutoClampCmd(true),
-      drive_sys.DriveToPointCmd({120.5, 72}, vex::reverse, .25),
-      clamper_sys.ClampCmd(ClamperSys::ClamperState::CLAMPED), intake_sys.ConveyorInCmd(), new DelayCommand(1850),
+    // Alliance-side Goal (Grab Goal and Score)
+    drive_sys.DriveToPointCmd({121, 88}, vex::reverse, 1, .5),
+    clamper_sys.AutoClampCmd(true),
+    drive_sys.DriveToPointCmd({120, 70}, vex::reverse, .25),
+    clamper_sys.ClampCmd(ClamperSys::ClamperState::CLAMPED),
+    intake_sys.ConveyorInCmd(),
+    new DelayCommand(1850),
+    intake_sys.ConveyorStopCmd(),
 
-      intake_sys.IntakeStopCmd(), intake_sys.ConveyorStopCmd()
-      // Alliance Stake
-      // Retrieve Rush Goal
-      // Score Stack near Goal
-      // Score Corner Rings (optional)
-      // Touch Hang structure
-    };
-    intake_sys.fixConveyorStalling(false);
+    // Alliance Stake
+    drive_sys.TurnToHeadingCmd(0),
+    drive_sys.DriveForwardCmd(8, vex::forward, .5),
+    intake_sys.ConveyorInCmd(),
+    new DelayCommand(3000), // wall stake mech and intake stuff
+    drive_sys.DriveForwardCmd(8, vex::reverse, .75),
+    new DelayCommand(3000), // wall stake mech stuff
+    intake_sys.OuttakeCmd(),
+    intake_sys.ConveyorOutCmd(),
 
-    cc.run();
+    // Alliance-side Goal (Deposit)
+    drive_sys.DriveToPointCmd({130, 48}, vex::reverse),
+    clamper_sys.ClampCmd(ClamperSys::ClamperState::UNCLAMPED),
+    new DelayCommand(50),
+    drive_sys.DriveForwardCmd(6, vex::forward),
+
+    // Retrieve Rush Goal
+    drive_sys.DriveToPointCmd({120, 96}, vex::forward, .75),
+    drive_sys.TurnToPointCmd({96, 114}, vex::reverse),
+    clamper_sys.AutoClampCmd(true),
+    drive_sys.DriveForwardCmd(34, vex::reverse, .35),
+    clamper_sys.ClampCmd(ClamperSys::ClamperState::CLAMPED),
+
+    intake_sys.IntakeStopCmd(),
+    intake_sys.ConveyorStopCmd()
+    // Score Stack near Goal
+    // Score Corner Rings (optional)
+    // Touch Hang structure
+  };
+  intake_sys.fixConveyorStalling(false);
+  
+  cc.run();
 }
 
 void red_negative_path() {

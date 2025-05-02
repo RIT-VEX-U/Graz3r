@@ -118,7 +118,7 @@ Pose2d zero{0, 0, from_degrees(0)};
 Pose2d red_positive_pos{19.4, 42.4, from_degrees(0)};
 Pose2d blue_positive_pos{91.4, 42.4, from_degrees(180)};
 // Pose2d red_negative_pos{19.4, 42.4, from_degrees(0)};
-Pose2d blue_negative_pos{123.5, 102.25, from_degrees(180)};
+Pose2d blue_negative_pos{115.5, 102.25, from_degrees(180)};// was 123.5 before the stick
 // Pose2d skills_pos{19.4, 42.4, from_degrees(0)};
 
 OdometryTank odom(left_drive_motors, right_drive_motors, robot_cfg, &imu);
@@ -134,7 +134,7 @@ void print_multiline(const std::string &str, int y, int x);
  * Main robot initialization on startup. Runs before opcontrol and autonomous are started.
  */
 void robot_init() {
-    odom.set_position(red_positive_pos);
+    odom.set_position(blue_negative_pos);
     screen::start_screen(
       Brain.Screen, {new screen::StatsPage(
                       {{"left_front_most", left_front_most},
