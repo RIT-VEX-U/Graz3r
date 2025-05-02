@@ -15,10 +15,10 @@ void opcontrol() {
     wallstake_toggler.pressed([]() {
         wallstake_sys.hold = true;
         if (wallstake_sys.get_angle().degrees() < 10 || wallstake_motor.velocity(vex::velocityUnits::dps) > 5) {
-            wallstake_sys.set_setpoint(from_degrees(22));
+            wallstake_sys.set_setpoint(from_degrees(26));
             wallstake_sol.set(false);
         } else if (wallstake_sys.get_angle().degrees() > 10) {
-            wallstake_sys.set_setpoint(from_degrees(180));
+            wallstake_sys.set_setpoint(from_degrees(143));
             wallstake_sol.set(true);
         }
     });
@@ -64,10 +64,14 @@ void opcontrol() {
             OdometryBase *odombase = &odom;
             Pose2d pos = odombase->get_position();
 
+            // double left = (double)con.Axis3.position() / 100;
+            // double right = (double)con.Axis1.position() / 100;
+
             double left = (double)con.Axis3.position() / 100;
-            double right = (double)con.Axis1.position() / 100;
+            double right = (double)con.Axis2.position() / 100;
             // printf("ODO X: %.2f, Y: %.2f, R:%.2f\n", pos.x(), pos.y(), pos.rotation().degrees());
-            drive_sys.drive_arcade(left, right, 1, TankDrive::BrakeType::None);
+            // drive_sys.drive_arcade(left, right, 1, TankDrive::BrakeType::None);
+            drive_sys.drive_tank(left, right, 1, TankDrive::BrakeType::None);
         }
         vexDelay(20);
     }
