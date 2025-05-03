@@ -51,7 +51,7 @@ INC_F  = include
 
 # build targets
 all: $(BUILD)/$(PROJECT).bin
-	$(ECHO) Time of Compilation: $(shell TIME /T)
+	$(ECHO) Time of Build: $(shell $(TIME))
 
 # include build rules
 include vex/mkrules.mk
