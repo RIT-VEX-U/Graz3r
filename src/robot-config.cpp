@@ -67,7 +67,7 @@ PID::pid_config_t correction_pid_cfg{
   .deadband = 1,
 };
 
-FeedForward::ff_config_t drive_ff_cfg{.kS = 0.01, .kV = 0.015, .kA = 0.002, .kG = 0};
+FeedForward::ff_config_t drive_ff_cfg{.kS = 0.9, .kV = 0.015, .kA = 0.002, .kG = 0};
 
 PID turn_pid{turn_pid_cfg};
 // ======== SUBSYSTEMS ========
@@ -94,7 +94,7 @@ Pose2d red_r_test{19.4, 42.4, from_degrees(0)};
 OdometryTank odom(left_drive_motors, right_drive_motors, robot_cfg, &imu);
 OdometryTankLidar lidar(
   0.75, 5.497786, Pose2d(0, 0, 0), EVec<3>{100, 100, 0.1}, EVec<3>{0.05, 0.05, deg2rad(0.01)},
-  EVec<2>{1, 1}, imu, left_drive_motors, right_drive_motors, vex::PORT13, 921600, Transform2d(-3, 4.25, from_degrees(180)), 0.188575, 0.024388, 1.6365, 0.1932
+  EVec<2>{1, 1}, imu, left_drive_motors, right_drive_motors, vex::PORT13, 921600, Transform2d(-5.25, 6.1, from_degrees(180)), 0.188575, 0.024388, 1.6365, 0.1932
 );
 
 TankDrive drive_sys(left_drive_motors, right_drive_motors, robot_cfg, &odom);
@@ -110,54 +110,31 @@ vex::gps gps_sensor{vex::PORT17, -6.5, 3, vex::distanceUnits::in, 90, vex::turnT
  * Main robot initialization on startup. Runs before opcontrol and autonomous are started.
  */
 void robot_init() {
+  printf("start\n");
   gps_sensor.calibrate();
-  while (gps_sensor.isCalibrating()) {
+  imu.calibrate();
+  
+  while (gps_sensor.isCalibrating() || imu.isCalibrating()) {
     vexDelay(10);
   }
-  gps_sensor.setOrigin(1.75, 4, vex::distanceUnits::in);
-  
-    while (gps_sensor.quality() != 100) {
-        // // printf("ugh\n");
-        // double x = gps_sensor.xPosition(vex::distanceUnits::in) + 72;
-        // double y = gps_sensor.yPosition(vex::distanceUnits::in) + 72;
-        // double heading = wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90);
-        // double quality = gps_sensor.quality();
+  printf("calibrated\n"); 
+  gps_sensor.setOrigin(1.75, 4, vex::distanceUnits::in); 
 
-        // printf("%f, %f, %f, %f\n", x, y, heading, quality);
+  int bad_gps_count = 0;
+  
+    while (gps_sensor.quality() != 100 && bad_gps_count < 500) {
+      bad_gps_count++;
+
         vexDelay(10);
     }
 
-    double x = gps_sensor.xPosition(vex::distanceUnits::in) + 72;
-    double y = gps_sensor.yPosition(vex::distanceUnits::in) + 72;
+    if (bad_gps_count >= 500) {
+        return;
+    }
+    double x = gps_sensor.xPosition(vex::distanceUnits::in) + 71.25;
+    double y = gps_sensor.yPosition(vex::distanceUnits::in) + 71.25;
     double heading = deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90));
 
     lidar.set_position(Pose2d(x, y, from_radians(heading)));
-    
-  //   odom.set_position(red_r_test);
-
-  //   while (imu.isCalibrating()) {
-  //       vexDelay(10);
-  //   }
-  //   screen::start_screen(
-  //     Brain.Screen, {new screen::StatsPage(
-  //                     {{"left_front_most", left_front_most},
-  //                      {"left_front_middle", left_front_middle},
-  //                      {"left_back_middle", left_back_middle},
-  //                      {"left_back_most", left_back_most},
-  //                      {"right_front_most", right_front_most},
-  //                      {"right_front_middle", right_front_middle},
-  //                      {"right_back_middle", right_back_middle},
-  //                      {"right_back_most", right_back_most},
-  //                      {"intake", intake_motor},
-  //                      {"conveyor", conveyor}}
-  //                   )}
-  //   );
-  //   printf("started!\n");
-
-  //   vexDelay(5000);
-
-    // while (true) {
-    //   std::cout << lidar.get_position() << std::endl;
-    //   vexDelay(100);
-    // }
+    printf("gps pos: %f, %f, %f\n", x, y, rad2deg(heading));
 }

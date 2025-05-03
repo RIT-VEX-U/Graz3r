@@ -237,9 +237,24 @@ void opcontrol() {
     // }};
 
     while (true) {
-        // printf("opcontroolling\n");
-        // printf("%f, %f, %f\n", ukf.xhat(0), ukf.xhat(1), rad2deg(ukf.xhat(2)));
-        // drive_sys.drive_tank(0.2, -0.2);
-        vexDelay(100);
+        if (true) {
+
+            if (!conveyor_button.pressing() && !conveyor_button_rev.pressing()) {
+                intake_sys.intake_stop();
+                intake_sys.conveyor_stop();
+            }
+            OdometryBase *odombase = &odom;
+            Pose2d pos = odombase->get_position();
+
+            // double left = (double)con.Axis3.position() / 100;
+            // double right = (double)con.Axis1.position() / 100;
+
+            double left = (double)con.Axis3.position() / 100;
+            double right = (double)con.Axis1.position() / 100;
+            // printf("ODO X: %.2f, Y: %.2f, R:%.2f\n", pos.x(), pos.y(), pos.rotation().degrees());
+            // drive_sys.drive_arcade(left, right, 1, TankDrive::BrakeType::None);
+            drive_sys.drive_arcade(left, right, 1, TankDrive::BrakeType::None);
+        }
+        vexDelay(20);
     }
 }

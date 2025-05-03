@@ -40,6 +40,7 @@ OdometryTankLidar::OdometryTankLidar(
 
         observer_.set_xhat(initial_pose.vector());
         lidar_handle = new vex::task{lidar_thread, (void *)this};  
+        // odom_handle = new vex::task{odom_thread, (void *)this};
         
       }
 
@@ -62,7 +63,7 @@ EVec<3> OdometryTankLidar::h_odom(const EVec<3> &xhat, const EVec<2> &u) {
 
 // the walls are 0.25in from the edge of the field, we're measuring inside the walls, not the field
 EVec<2> OdometryTankLidar::h_lidar(const EVec<3> &xhat, const EVec<2> &u) {
-    const double field_width = 141.0;
+    const double field_width = 141;
     const double wall_to_tile = 0.75;
 
     Pose2d robot_pose = Pose2d{xhat(0), xhat(1), from_radians(xhat(2))};
@@ -73,13 +74,17 @@ EVec<2> OdometryTankLidar::h_lidar(const EVec<3> &xhat, const EVec<2> &u) {
     double s = std::sin(beam_theta);
 
     double d_left = (c < 0) ? ((lidar_xhat(0) - wall_to_tile) / -c) : std::numeric_limits<double>::infinity();
-    double d_right = (c > 0) ? ((field_width - (lidar_xhat(0) + wall_to_tile)) / c) : std::numeric_limits<double>::infinity();
+    double d_right = (c > 0) ? ((field_width - (lidar_xhat(0))) / c) : std::numeric_limits<double>::infinity();
     double d_bottom = (s < 0) ? ((lidar_xhat(1) - wall_to_tile)  / -s) : std::numeric_limits<double>::infinity();
-    double d_top = (s > 0) ? ((field_width - (lidar_xhat(1) + wall_to_tile)) / s) : std::numeric_limits<double>::infinity();
+    double d_top = (s > 0) ? ((field_width - (lidar_xhat(1))) / s) : std::numeric_limits<double>::infinity();
 
     double min_distance = std::min({d_left, d_right, d_bottom, d_top});
 
     return EVec<2>{min_distance, u(1)};
+}
+
+EVec<3> OdometryTankLidar::h_full_state(const EVec<3> &xhat, const EVec<2> &u) {
+    return EVec<3>{xhat(0), xhat(1), xhat(2)};
 }
 
 EVec<3> OdometryTankLidar::f(const EVec<3> &xhat, const EVec<2> &u) {
@@ -95,22 +100,22 @@ EVec<3> OdometryTankLidar::f(const EVec<3> &xhat, const EVec<2> &u) {
 }
 
 int OdometryTankLidar::odom_thread(void *ptr) {
-    uint32_t count = 0;
-    auto thread_start = std::chrono::steady_clock::now();
-    prev_left = (left_side_.position(vex::deg) / 360.0) * circumference_ / gear_ratio_;
-    prev_right = (right_side_.position(vex::deg) / 360.0) * circumference_ / gear_ratio_;
-    while (running_) {
-        mutex.lock();
-        double left_in = (left_side_.position(vex::deg) / 360.0) * circumference_ / gear_ratio_;
-        double right_in = (right_side_.position(vex::deg) / 360.0) * circumference_ / gear_ratio_;
-        double theta = wrap_radians_180(deg2rad(imu_.rotation(vex::deg)));
-        double omega = deg2rad(imu_.gyroRate(vex::axisType::zaxis, vex::velocityUnits::dps));
-        odom_update(left_in, right_in, from_radians(theta), omega);
-        prev_left = left_in;
-        prev_right = right_in;
-        mutex.unlock();
+    OdometryTankLidar &obj = *((OdometryTankLidar *)ptr);
+    while (obj.running_) {
+        uint64_t now = vexSystemHighResTimeGet() - obj.first_time;
 
-        vex::this_thread::sleep_until(thread_start + std::chrono::milliseconds(10 * ++count));
+        // this_thread::sleep_until(now + obj.first_time + 100);
+
+        if (now - obj.last_time >= 10000) {
+            obj.mutex.lock();
+            obj.odom_update(now - obj.last_time);
+            obj.mutex.unlock();
+        }
+
+        obj.last_time = now;
+        this_thread::yield();
+        
+        
     }
     return 0;
 }
@@ -122,11 +127,6 @@ int OdometryTankLidar::lidar_thread(void *ptr) {
     vexGenericSerialFlush(obj.port_);
     constexpr size_t BUFFER_SIZE = 4;
     uint8_t buf[BUFFER_SIZE];
-
-    obj.imu_.calibrate();
-    while (obj.imu_.isCalibrating()) {
-        vexDelay(1);
-    }
 
     while (obj.running_) {
         if (receive_packet(obj.port_, buf, BUFFER_SIZE) != 4) {
@@ -140,7 +140,13 @@ int OdometryTankLidar::lidar_thread(void *ptr) {
         memcpy(&dist, buf + sizeof(angle_q6), sizeof(dist));
 
         double angle = fmod((angle_q6 * 0.015625) + 351.5, 360);
-        double distance = (dist / 25.4) * 1.015625; // to inches
+        double distance = (dist / 25.4); // to inches
+
+        if (obj.observer_.xhat(0) > 140 || obj.observer_.xhat(1) > 140 || obj.observer_.xhat(0) < 0 || obj.observer_.xhat(1) < 0) {
+            obj.observer_.set_xhat(0, gps_sensor.xPosition(vex::distanceUnits::in) + 71.25);
+            obj.observer_.set_xhat(1, gps_sensor.yPosition(vex::distanceUnits::in) + 71.25);
+            obj.observer_.set_xhat(2, deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90)));
+        }
 
         if (angle > 360 || angle < 0) {
             continue;
@@ -185,19 +191,16 @@ void OdometryTankLidar::kill_threads() {
 // Happens every 10ms, when we get data
 // u = [v, omega]
 // we compute v based on 10 ms time interval, and hold it constant on all subsequent lidar updates
-void OdometryTankLidar::odom_update(const double &left, const double &right, const Rotation2d &theta, double &omega) {
-    double dleft = (left - prev_left);
-    double dright = (right - prev_right);
-    // kinematics then divide by 10ms timestep
-    current_velocity = ((dleft + dright) / 2.0) / 0.01;
-    current_angular_velocity = omega;
-    // force angle to be what the gyro reads............ ugh
-    observer_.set_xhat(2, theta.wrapped_radians_180());
-    // this is DEFINITELY a bad idea but I think if I don't do this the pose will just not update for >1/2 of the lidar
-    // rotation we can't just not update the pose for like 800ms
-    observer_.predict(EVec<2>{current_velocity, current_angular_velocity}, 0.01);
-    // this might be a bad idea who knows
-    last_time = vexSystemHighResTimeGet();
+void OdometryTankLidar::odom_update(uint64_t dt_us) {
+    double omega = deg2rad(imu_.gyroRate(vex::axisType::xaxis, vex::dps));
+    double velocity = get_drive_velocity();
+
+    // predict using saved velocity and angular velocity
+    observer_.predict(EVec<2>{velocity, omega}, dt_us / 1000000.0);
+    printf(
+        " predict, %f, %f, %f, %f, %f\n", observer_.xhat(0), observer_.xhat(1),
+        rad2deg(observer_.xhat(2)), omega, velocity
+      );
 }
 
 // Happens immediately when we get data
@@ -205,7 +208,11 @@ void OdometryTankLidar::odom_update(const double &left, const double &right, con
 // the way this does this makes me sad
 // we should latency compensate or use a buffer or some such... ugh
 void OdometryTankLidar::lidar_update(const double &distance_in, const double &angle_deg_cw) {
-    static uint64_t first_time = vexSystemHighResTimeGet();
+    static bool first = true;
+    if (first) {
+        first_time = vexSystemHighResTimeGet();
+        first = false;
+    }
     uint64_t now = vexSystemHighResTimeGet() - first_time;
     
     
@@ -216,20 +223,23 @@ void OdometryTankLidar::lidar_update(const double &distance_in, const double &an
 
     // predict using saved velocity and angular velocity
     observer_.predict(EVec<2>{velocity, omega}, (now - last_time) / 1000000.0);
-    observer_.correct(EVec<2>{distance_in, angle_deg_cw}, EVec<2>{distance_in, angle_deg_cw}, EVec<2>{distance_in / 50, 1});
+    observer_.correct(EVec<2>{distance_in, angle_deg_cw}, EVec<2>{distance_in, angle_deg_cw}, EVec<2>{distance_in / 20, 1});
+    if (gps_sensor.quality() == 100) {
+        observer_.correct<3>(EVec<2>{0, 0}, EVec<3>{gps_sensor.xPosition(vex::distanceUnits::in) + 71.25, gps_sensor.yPosition(vex::distanceUnits::in) + 71.25, deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90))}, h_full_state, EVec<3>{0.1, 0.1, 0.1}, mean_func_X, residual_func_X, residual_func_X, add_func_X);
+    }
     // observer_.set_xhat(2, 0);
     last_time = now;
 
-    if (observer_.xhat(0) > 140 || observer_.xhat(1) > 140 || (pred - distance_in) > 50) {
-        observer_.set_xhat(0, gps_sensor.xPosition(vex::distanceUnits::in) + 72);
-        observer_.set_xhat(1, gps_sensor.yPosition(vex::distanceUnits::in) + 72);
+    if (observer_.xhat(0) > 140 || observer_.xhat(1) > 140 || observer_.xhat(0) < 0 || observer_.xhat(1) < 0) {
+        observer_.set_xhat(0, gps_sensor.xPosition(vex::distanceUnits::in) + 71.25);
+        observer_.set_xhat(1, gps_sensor.yPosition(vex::distanceUnits::in) + 71.25);
         observer_.set_xhat(2, deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90)));
     }
 
-    printf(
-      "%llu, %f, %f, %f, %f, %f, %f\n", now, observer_.xhat(0), observer_.xhat(1),
-      rad2deg(observer_.xhat(2)), pred, distance_in, angle_deg_cw
-    );
+    // printf(
+    //   "%llu, %f, %f, %f, %f, %f, %f\n", now, observer_.xhat(0), observer_.xhat(1),
+    //   rad2deg(observer_.xhat(2)), pred, distance_in, angle_deg_cw
+    // );
     // printf("%f,%f\n", distance_in, angle_deg_cw);
 }
 
@@ -302,9 +312,7 @@ void OdometryTankLidar::lidar_update(const double &distance_in, const double &an
                     return -1;
                 }
             }
-            if (vexGenericSerialReceiveAvail(port) == 0) {
-                vex::this_thread::yield();
-            }
+            vex::this_thread::yield();
         }
     }
 

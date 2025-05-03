@@ -18,16 +18,17 @@ class OdometryTankLidar {
 
     static EVec<3> h_odom(const EVec<3> &xhat, const EVec<2> &u);
     static EVec<2> h_lidar(const EVec<3> &xhat, const EVec<2> &u);
+    static EVec<3> h_full_state(const EVec<3> &xhat, const EVec<2> &u);
     static EVec<3> f(const EVec<3> &xhat, const EVec<2> &u);
 
-    int odom_thread(void *ptr);
+    static int odom_thread(void *ptr);
     static int lidar_thread(void *ptr);
     void kill_threads();
 
     // Happens every 10ms, when we get data
     // y = [dleft, dright, theta]
     // we compute v and omega based on 10ms time interval, ugh
-    void odom_update(const double &left, const double &right, const Rotation2d &theta, double &omega);
+    void odom_update(uint64_t dt_us);
 
     // Happens immediately when we get data
     // y = [distance, angle]
@@ -54,7 +55,8 @@ class OdometryTankLidar {
 
     double circumference_;
     double gear_ratio_;
-    uint32_t last_time;
+    std::atomic<uint64_t> last_time;
+    std::atomic<uint64_t> first_time;
     Pose2d current_pos;
 
     double Kvl_, Kal_, Kva_, Kaa_;
@@ -70,6 +72,7 @@ class OdometryTankLidar {
     std::atomic<bool> running_{true};
 
     vex::task *lidar_handle;
+    vex::task *odom_handle;
 
 
     static EVec<3> mean_func_X(const EMat<3, 5> &sigmas, const EVec<5> &Wm) {

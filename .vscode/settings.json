@@ -7,6 +7,7 @@
 		"functional": "cpp",
 		"mutex": "cpp",
 		"new": "cpp",
-		"cmath": "cpp"
+		"cmath": "cpp",
+		"random": "cpp"
 	}
 }
