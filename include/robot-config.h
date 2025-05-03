@@ -1,5 +1,6 @@
 #pragma once
 #include "TempSubSystems/TempSubSystems.h"
+#include "core/subsystems/odometry/odometry_tank_lidar.h"
 #include "core.h"
 #include "core/subsystems/fun/video.h"
 #include "inttypes.h"
