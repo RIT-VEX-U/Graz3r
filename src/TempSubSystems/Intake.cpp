@@ -75,18 +75,18 @@ void IntakeSys::colorSort() {
     }
     if (colorToRemove == BLUE && seeing_blue()) {
         printf("seeing blue!\n");
-        conveyor_state = IntakeState::STOP;
         con_stopped_for_sort = true;
+        intakeVolts = 1;
         color_sort_timer.reset();
     } else if (colorToRemove == RED && seeing_red()) {
         printf("seeing red!\n");
-        conveyor_state = IntakeState::STOP;
         con_stopped_for_sort = true;
+        intakeVolts = 1;
         color_sort_timer.reset();
     }
     if (color_sort_timer.time(vex::timeUnits::msec) > 150 && con_stopped_for_sort) {
         printf("resetting conveyor\n");
-        conveyor_state = IntakeState::IN;
+        intakeVolts = 12;
         con_stopped_for_sort = false;
     }
 }

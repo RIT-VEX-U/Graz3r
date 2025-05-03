@@ -116,20 +116,21 @@ WallStakeMech wallstake_sys{wallstake_motor,    wallstake_sensor, wallstake_tole
 
 Pose2d zero{0, 0, from_degrees(0)};
 Pose2d red_positive_pos{19.4, 42.4, from_degrees(0)};
-Pose2d blue_positive_pos{91.4, 42.4, from_degrees(180)};
+Pose2d red_positive_pos_stick{29.53, 42.4, from_degrees(0)};
+Pose2d blue_positive_pos{124.6, 42.4, from_degrees(180)};
+Pose2d blue_positive_pos_stick{114.6, 42.4, from_degrees(180)};
 // Pose2d red_negative_pos{19.4, 42.4, from_degrees(0)};
-Pose2d blue_negative_pos{115.5, 102.25, from_degrees(180)};// was 123.5 before the stick
+Pose2d blue_negative_pos{115.5, 102.25, from_degrees(180)}; // was 123.5 before the stick
 // Pose2d skills_pos{19.4, 42.4, from_degrees(0)};
 
 OdometryTank odom(left_drive_motors, right_drive_motors, robot_cfg, &imu);
-OdometryTankLidar lidar(
-  0.75, 5.497786, Pose2d(0, 0, 0), EVec<3>{100, 100, 0.1}, EVec<3>{0.05, 0.05, deg2rad(0.01)},
-  EVec<2>{1, 1}, imu, left_drive_motors, right_drive_motors, vex::PORT13, 921600, Transform2d(-5.25, 6.1, from_degrees(180)), 0.188575, 0.024388, 1.6365, 0.1932
-);
+// OdometryTankLidar lidar(
+//   0.75, 5.497786, Pose2d(0, 0, 0), EVec<3>{100, 100, 0.1}, EVec<3>{0.05, 0.05, deg2rad(0.01)}, EVec<2>{1, 1}, imu,
+//   left_drive_motors, right_drive_motors, vex::PORT13, 921600, Transform2d(-5.25, 6.1, from_degrees(180)), 0.188575,
+//   0.024388, 1.6365, 0.1932
+// );
 
 vex::gps gps_sensor{vex::PORT17, -6.5, 3, vex::distanceUnits::in, 90, vex::turnType::left};
-
-
 
 TankDrive drive_sys(left_drive_motors, right_drive_motors, robot_cfg, &odom);
 
@@ -142,7 +143,7 @@ void print_multiline(const std::string &str, int y, int x);
  * Main robot initialization on startup. Runs before opcontrol and autonomous are started.
  */
 void robot_init() {
-    odom.set_position(blue_negative_pos);
+    odom.set_position(blue_positive_pos_stick);
     screen::start_screen(
       Brain.Screen, {new screen::StatsPage(
                       {{"left_front_most", left_front_most},
@@ -160,10 +161,6 @@ void robot_init() {
     if (!imu.installed()) {
         printf("no imu installed\n");
     }
-    while (imu.isCalibrating()) {
-        vexDelay(10);
-    }
-    printf("imu calibrated!\n");
     bool all_motors_cool = true;
     bool all_motors_installed = true;
     std::vector<vex::motor> overheated_motors;
@@ -192,28 +189,28 @@ void robot_init() {
     printf("start\n");
     gps_sensor.calibrate();
     imu.calibrate();
-    
+
     while (gps_sensor.isCalibrating() || imu.isCalibrating()) {
-      vexDelay(10);
+        vexDelay(10);
     }
-    printf("calibrated\n"); 
-    gps_sensor.setOrigin(1.75, 4, vex::distanceUnits::in); 
-  
+    printf("calibrated\n");
+    gps_sensor.setOrigin(1.75, 4, vex::distanceUnits::in);
+
     int bad_gps_count = 0;
-    
-      while (gps_sensor.quality() != 100 && bad_gps_count < 500) {
+
+    while (gps_sensor.quality() != 100 && bad_gps_count < 500) {
         bad_gps_count++;
-  
-          vexDelay(10);
-      }
-  
-      if (bad_gps_count >= 500) {
-          return;
-      }
-      double x = gps_sensor.xPosition(vex::distanceUnits::in) + 71.25;
-      double y = gps_sensor.yPosition(vex::distanceUnits::in) + 71.25;
-      double heading = deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90));
-  
-      lidar.set_position(Pose2d(x, y, from_radians(heading)));
-      printf("gps pos: %f, %f, %f\n", x, y, rad2deg(heading));
+
+        vexDelay(10);
+    }
+
+    if (bad_gps_count >= 500) {
+        return;
+    }
+    double x = gps_sensor.xPosition(vex::distanceUnits::in) + 71.25;
+    double y = gps_sensor.yPosition(vex::distanceUnits::in) + 71.25;
+    double heading = deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90));
+
+    odom.set_position(Pose2d(x, y, from_radians(heading)));
+    printf("gps pos: %f, %f, %f\n", x, y, rad2deg(heading));
 }

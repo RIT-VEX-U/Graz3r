@@ -1,8 +1,8 @@
 #pragma once
 #include "TempSubSystems/TempSubSystems.h"
-#include "core/subsystems/odometry/odometry_tank_lidar.h"
 #include "core.h"
 #include "core/subsystems/fun/video.h"
+// #include "core/subsystems/odometry/odometry_tank_lidar.h"
 #include "inttypes.h"
 #include "vex.h"
 
@@ -37,7 +37,6 @@ extern vex::motor_group right_drive_motors;
 
 extern vex::motor wallstake_motor;
 
-
 extern vex::digital_out mcglight_board;
 
 // Pneumatics
@@ -65,7 +64,7 @@ extern PID turn_pid;
 extern PID::pid_config_t correction_pid_cfg;
 
 extern OdometryTank odom;
-extern OdometryTankLidar lidar;
+// extern OdometryTankLidar lidar;
 
 extern vex::gps gps_sensor;
 
