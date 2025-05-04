@@ -145,18 +145,18 @@ void print_multiline(const std::string &str, int y, int x);
 void robot_init() {
     odom.set_position(blue_negative_pos);
     screen::start_screen(
-      Brain.Screen, {new screen::StatsPage(
-                      {{"left_front_most", left_front_most},
-                       {"left_front_middle", left_front_middle},
-                       {"left_back_middle", left_back_middle},
-                       {"left_back_most", left_back_most},
-                       {"right_front_most", right_front_most},
-                       {"right_front_middle", right_front_middle},
-                       {"right_back_middle", right_back_middle},
-                       {"right_back_most", right_back_most},
-                       {"intake", intake_motor},
-                       {"conveyor", conveyor}}
-                    )}
+      Brain.Screen, {intake_sys.Page(), new screen::StatsPage(
+                                          {{"left_front_most", left_front_most},
+                                           {"left_front_middle", left_front_middle},
+                                           {"left_back_middle", left_back_middle},
+                                           {"left_back_most", left_back_most},
+                                           {"right_front_most", right_front_most},
+                                           {"right_front_middle", right_front_middle},
+                                           {"right_back_middle", right_back_middle},
+                                           {"right_back_most", right_back_most},
+                                           {"intake", intake_motor},
+                                           {"conveyor", conveyor}}
+                                        )}
     );
     if (!imu.installed()) {
         printf("no imu installed\n");
@@ -171,7 +171,7 @@ void robot_init() {
             all_motors_cool = false;
         }
         if (!mot.installed()) {
-            printf("motor on port: %.f not installed\n", mot.index() + 1);
+            printf("motor on port: %ld not installed\n", mot.index() + 1);
             all_motors_installed = false;
         }
     }
