@@ -49,37 +49,45 @@ void blue_negative_path() {
       intake_sys.OuttakeCmd(),
       intake_sys.ConveyorStopCmd(),
       clamper_sys.RushCmd(ClamperSys::RushState::OUT),
-      drive_sys.PurePursuitCmd(PurePursuit::Path({{111.33, 103.18}, {94.2, 107.38}, {85.06, 110.28}}, 7), vex::forward)
+      //drive_sys.PurePursuitCmd(PurePursuit::Path({{111.33, 103.18}, {94.2, 107.38}, {84.25, 110.28}}, 7), vex::forward)//{85.1, 110.325}; {85.06, 110.28} - {85.5, 110.75}
+      drive_sys.PurePursuitCmd(PurePursuit::Path({{111.33, 103.18}, {94.2, 107.38}, {83, 109.2}}, 7), vex::forward)
         ->withTimeout(1.5),
       clamper_sys.RushCmd(ClamperSys::RushState::IN),
-      drive_sys.DriveForwardCmd(24, vex::reverse),
+      drive_sys.DriveForwardCmd(24, vex::reverse)->withTimeout(1.5),
       // drive_sys.TurnDegreesCmd(60),
 
       // Alliance-side Goal (Ring)
-      drive_sys.TurnToPointCmd({120, 96}, vex::reverse, .4),
-      drive_sys.DriveToPointCmd({120, 96}, vex::reverse, .25),
+      drive_sys.TurnToPointCmd({118, 96}, vex::reverse, .4)->withTimeout(1.5),
+      drive_sys.DriveToPointCmd({118, 96}, vex::reverse, .35),
       intake_sys.IntakeCmd(),
       drive_sys.TurnToHeadingCmd(90, .75),
       drive_sys.DriveForwardCmd(20, vex::forward),
 
       // Alliance-side Goal (Grab Goal and Score)
-      drive_sys.DriveToPointCmd({120, 88}, vex::reverse, 1, .5),
+      drive_sys.DriveToPointCmd({118, 88}, vex::reverse, .8),
       clamper_sys.AutoClampCmd(true),
-      drive_sys.DriveToPointCmd({120, 70}, vex::reverse, .25),
+      drive_sys.DriveToPointCmd({118, 70.5}, vex::reverse, .125), //70-70.75
       clamper_sys.ClampCmd(ClamperSys::ClamperState::CLAMPED),
+      new DelayCommand(250),
       intake_sys.ConveyorInCmd(),
       new DelayCommand(1850),
       intake_sys.ConveyorStopCmd(),
 
       // Alliance Stake
-      drive_sys.TurnToHeadingCmd(0),
+      drive_sys.TurnToHeadingCmd(.5),
       wallstake_sys.SetSetPointCmd(from_degrees(26)),
+      intake_sys.FixConveyorStallingCmd(false),
       intake_sys.ConveyorInCmd(),
-      drive_sys.DriveForwardCmd(8, vex::forward, .5),
-      new DelayCommand(2225),
+      drive_sys.DriveForwardCmd(11, vex::forward, .5),
+      drive_sys.DriveForwardCmd(2, vex::reverse, .5),
+      drive_sys.TurnToHeadingCmd(0),
+      drive_sys.DriveForwardCmd(3, vex::forward, .5),
+      new DelayCommand(1750),
+      intake_sys.IntakeStopCmd(),
+      intake_sys.ConveyorStopCmd(),
       wallstake_sys.SetSetPointCmd(from_degrees(150)),
       new DelayCommand(2225),
-      drive_sys.DriveForwardCmd(8, vex::reverse, .75),
+      drive_sys.DriveForwardCmd(11, vex::reverse, .75),
       wallstake_sys.SetSetPointCmd(from_degrees(5)),
       intake_sys.OuttakeCmd(),
       intake_sys.ConveyorOutCmd(),
@@ -99,17 +107,12 @@ void blue_negative_path() {
       drive_sys.DriveForwardCmd(34, vex::reverse, .35),
       clamper_sys.ClampCmd(ClamperSys::ClamperState::CLAMPED),
 
-      // Retrieve last blue ring (knocked over during rush)
-      intake_sys.ColorSortCmd(true),
-      //get rings
-      intake_sys.ColorSortCmd(false),
-
       // Touch hang structure
       drive_sys.DriveToPointCmd({83.5,83.5}, vex::forward, .8)
     };
-    intake_sys.fixConveyorStalling(false);
-
+    
     cc.run();
+    intake_sys.fixConveyorStalling(false);
 }
 
 void red_negative_path() {
