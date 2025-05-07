@@ -9,8 +9,8 @@ void testing();
  */
 bool enableDrive = true;
 void opcontrol() {
-    // autonomous();
-    testing();
+    autonomous();
+    // testing();
 
     wallstake_toggler.pressed([]() {
         wallstake_sys.hold = true;

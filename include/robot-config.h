@@ -55,6 +55,15 @@ extern const vex::controller::button &wallstake_toggler;
 extern const vex::controller::button &wallstake_stow;
 extern const vex::controller::button &wallstake_alliancestake;
 
+extern Pose2d red_positive_pos;
+extern Pose2d red_positive_pos_stick;
+extern Pose2d blue_positive_pos;
+extern Pose2d blue_positive_pos_stick;
+extern Pose2d red_negative_pos;
+extern Pose2d red_negative_pos_stick;
+extern Pose2d blue_negative_pos;
+extern bool gps_pos_set;
+
 // ================ SUBSYSTEMS ================
 extern ClamperSys clamper_sys;
 extern IntakeSys intake_sys;
