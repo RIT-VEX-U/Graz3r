@@ -119,7 +119,7 @@ Pose2d red_positive_pos{19.4, 42.4, from_degrees(0)};
 Pose2d red_positive_pos_stick{29.53, 42.4, from_degrees(0)};
 Pose2d blue_positive_pos{124.6, 42.4, from_degrees(180)};
 Pose2d blue_positive_pos_stick{114.6, 42.4, from_degrees(180)};
-// Pose2d red_negative_pos{19.4, 42.4, from_degrees(0)};
+Pose2d red_negative_pos{27.625, 102, from_degrees(0)};
 Pose2d blue_negative_pos{113.5, 102.25, from_degrees(180)}; // was 123.5 before the stick, and 115.5 before remeasure
 // Pose2d skills_pos{19.4, 42.4, from_degrees(0)};
 
