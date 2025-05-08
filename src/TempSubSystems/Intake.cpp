@@ -148,7 +148,7 @@ void IntakeSys::colorSort() {
         deg_at_end_of_tracking = deg;
     }
     double delta_deg = deg - deg_at_start_of_tracking;
-    double thresh = 200;
+    double thresh = 270;
     if (colorToRemove == RED) {
         thresh = 280;
     }
@@ -159,7 +159,7 @@ void IntakeSys::colorSort() {
         color_sort_timer.reset();
     }
 
-    double time_thresh = 0.300;
+    double time_thresh = 0.200;
 
     if ((color_sort_timer.value() > time_thresh) && con_stopped_for_sort) {
         conveyorVolts = 12;

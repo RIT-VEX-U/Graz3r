@@ -3,14 +3,19 @@
 #include "robot-config.h"
 #include "vex.h"
 
+#include "core/utils/math/eigen_interface.h"
+
 void testing();
 /**
  * Main entrypoint for the driver control period
  */
 bool enableDrive = true;
 void opcontrol() {
-    autonomous();
+    // autonomous();
     // testing();
+
+    intake_sys.stop_color_sort();
+    // intake_sys.color_to_remove(IntakeSys::RingColor::BLUE);
 
     wallstake_toggler.pressed([]() {
         wallstake_sys.hold = true;
@@ -54,15 +59,19 @@ void opcontrol() {
 
     // ================ INIT ================
 
+
+
+    int count = 0;
     while (true) {
         if (enableDrive) {
+            count++;
 
             if (!conveyor_button.pressing() && !conveyor_button_rev.pressing()) {
                 intake_sys.intake_stop();
                 intake_sys.conveyor_stop();
             }
             OdometryBase *odombase = &odom;
-            Pose2d pos = odombase->get_position();
+            Pose2d pos = odom.get_position();
 
             // double left = (double)con.Axis3.position() / 100;
             // double right = (double)con.Axis1.position() / 100;
@@ -72,8 +81,17 @@ void opcontrol() {
             // printf("ODO X: %.2f, Y: %.2f, R:%.2f\n", pos.x(), pos.y(), pos.rotation().degrees());
             // drive_sys.drive_arcade(left, right, 1, TankDrive::BrakeType::None);
             drive_sys.drive_tank(left, right, 1, TankDrive::BrakeType::None);
+
+
+
+            if (count % 10 == 0) {
+                printf(
+                  "ODO X: %.2f, Y: %.2f, R:%.2f\n", pos.x(), pos.y(),
+                  pos.rotation().degrees()
+                );
+            }
         }
-        vexDelay(20);
+        vexDelay(10);
     }
 
     // ================ PERIODIC ================

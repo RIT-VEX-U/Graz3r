@@ -1,4 +1,5 @@
 #include "robot-config.h"
+#include "core/utils/math/eigen_interface.h"
 
 vex::brain Brain;
 vex::controller con;
@@ -63,7 +64,7 @@ PID drive_pid{drive_pid_cfg};
 
 PID::pid_config_t turn_pid_cfg{
   .p = 0.05,
-  .i = 0,
+  .i = 0.01,
   .d = 0.001,
   .deadband = 1,
   .on_target_time = 0.1,
@@ -87,6 +88,8 @@ PID::pid_config_t wallstake_pid_cfg{
 };
 
 FeedForward::ff_config_t drive_ff_cfg{.kS = 0.01, .kV = 0.015, .kA = 0.002, .kG = 0};
+
+FeedForward::ff_config_t turn_ff_cfg{.kS = 0.01, .kV = 0.015, .kA = 0.002, .kG = 0};
 
 PID turn_pid{turn_pid_cfg};
 PID wallstake_pid(wallstake_pid_cfg);
@@ -119,9 +122,9 @@ Pose2d red_positive_pos{19.4, 42.4, from_degrees(0)};
 Pose2d red_positive_pos_stick{29.53, 42.4, from_degrees(0)};
 Pose2d blue_positive_pos{124.6, 42.4, from_degrees(180)};
 Pose2d blue_positive_pos_stick{114.6, 42.4, from_degrees(180)};
-Pose2d red_negative_pos{27.625, 102, from_degrees(0)};
-Pose2d red_negative_pos_stick{28.625, 102, from_degrees(0)};
-Pose2d blue_negative_pos{113.5, 102.25, from_degrees(180)}; // was 123.5 before the stick, and 115.5 before remeasure
+Pose2d red_negative_pos{29, 133, from_degrees(-10)};
+// Pose2d red_negative_pos_stick{28.625, 102, from_degrees(0)};
+Pose2d blue_negative_pos{114.85, 103.15, from_degrees(166.5)}; // was 123.5 before the stick, and 115.5 before remeasure
 // Pose2d skills_pos{19.4, 42.4, from_degrees(0)};
 
 OdometryTank odom(left_drive_motors, right_drive_motors, robot_cfg, &imu);
@@ -134,7 +137,7 @@ OdometryTank odom(left_drive_motors, right_drive_motors, robot_cfg, &imu);
 vex::gps gps_sensor{vex::PORT17, -6.5, 3, vex::distanceUnits::in, 90, vex::turnType::left};
 
 TankDrive drive_sys(left_drive_motors, right_drive_motors, robot_cfg, &odom);
-bool gps_pos_set=false;
+bool gps_pos_set = false;
 // A global instance of vex::brain used for printing to the V5 brain screen
 void print_multiline(const std::string &str, int y, int x);
 
@@ -144,7 +147,7 @@ void print_multiline(const std::string &str, int y, int x);
  * Main robot initialization on startup. Runs before opcontrol and autonomous are started.
  */
 void robot_init() {
-    odom.set_position(red_negative_pos_stick);
+    odom.set_position(red_negative_pos);
     screen::start_screen(
       Brain.Screen, {intake_sys.Page(), new screen::StatsPage(
                                           {{"left_front_most", left_front_most},
@@ -215,5 +218,74 @@ void robot_init() {
 
     // odom.set_position(Pose2d(x, y, from_radians(heading)));
     // printf("gps pos: %f, %f, %f\n", x, y, rad2deg(heading));
+
+    // std::vector<double> x_vals;
+    // std::vector<double> y_vals;
+    // std::vector<double> heading_vals;
+    // while (true) {
+    //   if (gps_sensor.quality() != 100) { continue; }
+    //   double x = gps_sensor.xPosition(vex::distanceUnits::in) + 71.25;
+    //   double y = gps_sensor.yPosition(vex::distanceUnits::in) + 71.25;
+    //   double heading = deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90));
+    //   x_vals.push_back(x);
+    //   y_vals.push_back(y);
+    //   heading_vals.push_back(rad2deg(heading));
+    //   double avg_x = 0;
+    //   double avg_y = 0;
+    //   double avg_heading = 0;
+    //   for (int i = 0; i < x_vals.size(); i++) {
+    //     avg_x += x_vals[i];
+    //     avg_y += y_vals[i];
+    //     avg_heading += heading_vals[i];
+    //   }
+    //   avg_x /= x_vals.size();
+    //   avg_y /= y_vals.size();
+    //   avg_heading /= heading_vals.size();
+    //   // Pose2d gps_pos(x, y, from_radians(heading));
+    //   std::cout << avg_x << "," << avg_y << "," << avg_heading << std::endl;
+    //   vexDelay(100);
+    // }
+
     gps_pos_set = true;
+
+    EMat<3, 3> K = EMat<3, 3>::Zero(); 
+    EVec<3> r{8, 8, 1};
+    EVec<3> q{0.1, 0.1, 0.1};
+    EVec<3> R{0, 0, 0};
+    EVec<3> Q{0, 0, 0};
+
+    for (int i = 0; i < 3; i++) {
+        R(i) = r(i) * r(i);
+        Q(i) = q(i) * q(i);
+    }
+
+    for (int row = 0; row < 3; row++) {
+        if (Q(row) == 0) {
+            K(row, row) = 0;
+        } else {
+            K(row, row) = Q(row) / (Q(row) + std::sqrt(Q(row) * R(row)));
+        }
+    }
+
+    std::cout << K << std::endl << std::endl;
+
+    while (true) {
+        double gps_x = gps_sensor.xPosition(vex::distanceUnits::in) + 72;
+        double gps_y = gps_sensor.yPosition(vex::distanceUnits::in) + 72;
+        double gps_heading = deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90));
+        int gps_quality = gps_sensor.quality();
+        Pose2d gps_pos(gps_x, gps_y, from_radians(gps_heading));
+        // printf("%f\n", gps_pos.rotation().degrees());
+
+        if (gps_quality == 100) {
+            Twist2d gps_twist = odom.get_position().log(gps_pos);
+
+            EVec<3> scaled_twist_vec = K * EVec<3>(gps_twist.dx(), gps_twist.dy(), gps_twist.dtheta());
+            Twist2d scaled_twist = Twist2d(scaled_twist_vec(0), scaled_twist_vec(1), scaled_twist_vec(2));
+
+            odom.set_position(odom.get_position().exp(scaled_twist));
+        }
+
+        vexDelay(40);
+    }
 }
