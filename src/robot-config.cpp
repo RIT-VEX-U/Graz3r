@@ -40,6 +40,7 @@ vex::digital_out mcglight_board(Brain.ThreeWirePort.F);
 vex::digital_out goal_grabber_sol{Brain.ThreeWirePort.H};
 vex::digital_out goal_rush_sol{Brain.ThreeWirePort.G};
 vex::digital_out wallstake_sol{Brain.ThreeWirePort.E};
+vex::digital_out climb_sol{Brain.ThreeWirePort.D};
 
 // Button Definitions
 const vex::controller::button &goal_grabber = con.ButtonB;
@@ -49,7 +50,8 @@ const vex::controller::button &conveyor_button_rev = con.ButtonR2;
 
 const vex::controller::button &wallstake_toggler = con.ButtonL1;
 const vex::controller::button &wallstake_stow = con.ButtonL2;
-const vex::controller::button &wallstake_alliancestake = con.ButtonDown;
+const vex::controller::button &wallstake_alliancestake = con.ButtonLeft;
+const vex::controller::button &climb_button = con.ButtonX;
 
 // ================ SUBSYSTEMS ================
 PID::pid_config_t drive_pid_cfg{
@@ -147,7 +149,7 @@ void print_multiline(const std::string &str, int y, int x);
  * Main robot initialization on startup. Runs before opcontrol and autonomous are started.
  */
 void robot_init() {
-    odom.set_position(red_negative_pos);
+    odom.set_position(blue_negative_pos);
     screen::start_screen(
       Brain.Screen, {intake_sys.Page(), new screen::StatsPage(
                                           {{"left_front_most", left_front_most},
@@ -246,46 +248,47 @@ void robot_init() {
     //   vexDelay(100);
     // }
 
-    gps_pos_set = true;
+    // gps_pos_set = true;
 
-    EMat<3, 3> K = EMat<3, 3>::Zero(); 
-    EVec<3> r{8, 8, 1};
-    EVec<3> q{0.1, 0.1, 0.1};
-    EVec<3> R{0, 0, 0};
-    EVec<3> Q{0, 0, 0};
+    // EMat<3, 3> K = EMat<3, 3>::Zero(); 
+    // EVec<3> r{8, 8, 1};
+    // EVec<3> q{0.1, 0.1, 0.1};
+    // EVec<3> R{0, 0, 0};
+    // EVec<3> Q{0, 0, 0};
 
-    for (int i = 0; i < 3; i++) {
-        R(i) = r(i) * r(i);
-        Q(i) = q(i) * q(i);
-    }
+    // for (int i = 0; i < 3; i++) {
+    //     R(i) = r(i) * r(i);
+    //     Q(i) = q(i) * q(i);
+    // }
 
-    for (int row = 0; row < 3; row++) {
-        if (Q(row) == 0) {
-            K(row, row) = 0;
-        } else {
-            K(row, row) = Q(row) / (Q(row) + std::sqrt(Q(row) * R(row)));
-        }
-    }
+    // for (int row = 0; row < 3; row++) {
+    //     if (Q(row) == 0) {
+    //         K(row, row) = 0;
+    //     } else {
+    //         K(row, row) = Q(row) / (Q(row) + std::sqrt(Q(row) * R(row)));
+    //     }
+    // }
 
-    std::cout << K << std::endl << std::endl;
+    // std::cout << K << std::endl << std::endl;
 
-    while (true) {
-        double gps_x = gps_sensor.xPosition(vex::distanceUnits::in) + 72;
-        double gps_y = gps_sensor.yPosition(vex::distanceUnits::in) + 72;
-        double gps_heading = deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90));
-        int gps_quality = gps_sensor.quality();
-        Pose2d gps_pos(gps_x, gps_y, from_radians(gps_heading));
-        // printf("%f\n", gps_pos.rotation().degrees());
+    // while (true) {
+    //     double gps_x = gps_sensor.xPosition(vex::distanceUnits::in) + 72;
+    //     double gps_y = gps_sensor.yPosition(vex::distanceUnits::in) + 72;
+    //     double gps_heading = deg2rad(wrap_degrees_180(gps_sensor.heading(vex::rotationUnits::deg) + 90));
+    //     int gps_quality = gps_sensor.quality();
+    //     Pose2d gps_pos(gps_x, gps_y, from_radians(gps_heading));
+    //     // printf("%f\n", gps_pos.rotation().degrees());
 
-        if (gps_quality == 100) {
-            Twist2d gps_twist = odom.get_position().log(gps_pos);
+    //     if (gps_quality == 100) {
+    //         Twist2d gps_twist = odom.get_position().log(gps_pos);
 
-            EVec<3> scaled_twist_vec = K * EVec<3>(gps_twist.dx(), gps_twist.dy(), gps_twist.dtheta());
-            Twist2d scaled_twist = Twist2d(scaled_twist_vec(0), scaled_twist_vec(1), scaled_twist_vec(2));
+    //         EVec<3> scaled_twist_vec = K * EVec<3>(gps_twist.dx(), gps_twist.dy(), gps_twist.dtheta());
+    //         Twist2d scaled_twist = Twist2d(scaled_twist_vec(0), scaled_twist_vec(1), scaled_twist_vec(2));
 
-            odom.set_position(odom.get_position().exp(scaled_twist));
-        }
+    //         odom.set_position(odom.get_position().exp(scaled_twist));
+    //     }
 
-        vexDelay(40);
-    }
+    //     vexDelay(40);
+    // }
+    vexDelay(10);
 }

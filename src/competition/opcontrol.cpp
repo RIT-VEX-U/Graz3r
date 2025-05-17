@@ -20,7 +20,7 @@ void opcontrol() {
     wallstake_toggler.pressed([]() {
         wallstake_sys.hold = true;
         if (wallstake_sys.get_angle().degrees() < 10 || wallstake_motor.velocity(vex::velocityUnits::dps) > 5) {
-            wallstake_sys.set_setpoint(from_degrees(26));
+            wallstake_sys.set_setpoint(from_degrees(27));
             wallstake_sol.set(false);
         } else if (wallstake_sys.get_angle().degrees() > 10) {
             wallstake_sys.set_setpoint(from_degrees(143));
@@ -32,6 +32,17 @@ void opcontrol() {
         wallstake_sys.hold = true;
         wallstake_sys.set_setpoint(from_degrees(5));
         wallstake_sol.set(false);
+    });
+
+    wallstake_alliancestake.pressed([]() {
+        wallstake_sys.hold = true;
+        if (wallstake_sys.get_angle().degrees() > 90) {
+            wallstake_sys.set_setpoint(from_degrees(5));
+            wallstake_sol.set(false);
+        } else {
+            wallstake_sys.set_setpoint(from_degrees(178));
+            wallstake_sol.set(false);
+        }
     });
 
     goal_grabber.pressed([]() { clamper_sys.toggle_clamp(); });
@@ -53,6 +64,10 @@ void opcontrol() {
     conveyor_button_rev.released([]() {
         intake_sys.intake_stop();
         intake_sys.conveyor_stop();
+    });
+
+    climb_button.pressed([]() {
+        climb_sol.set(!climb_sol.value());
     });
 
     goal_rush_arm.pressed([]() { clamper_sys.toggle_rush_arm(); });

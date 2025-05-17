@@ -44,12 +44,15 @@ extern vex::digital_out mcglight_board;
 extern vex::digital_out goal_grabber_sol;
 extern vex::digital_out goal_rush_sol;
 extern vex::digital_out wallstake_sol;
+extern vex::digital_out climb_sol;
 
 // Button Definitions
 extern const controller::button &goal_grabber;
 extern const controller::button &goal_rush_arm;
 extern const controller::button &conveyor_button;
 extern const controller::button &conveyor_button_rev;
+
+extern const controller::button &climb_button;
 
 extern const vex::controller::button &wallstake_toggler;
 extern const vex::controller::button &wallstake_stow;
